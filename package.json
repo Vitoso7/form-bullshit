@@ -10,9 +10,11 @@
   },
   "dependencies": {
     "final-form": "^4.20.9",
+    "final-form-calculate": "^1.3.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-final-form": "^6.5.9",
+    "react-input-mask": "^2.0.4",
     "zod": "^3.20.2"
   },
   "devDependencies": {
