@@ -1,7 +1,7 @@
 import { Button, darkScrollbar, InputProps, TextField } from "@mui/material";
 import { Box } from "@mui/system";
 import { FormApi } from "final-form";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Form, Field } from "react-final-form";
 import createDecorator from "final-form-calculate";
 import { z } from "zod";
@@ -18,6 +18,7 @@ const UserData = z.object({
 const UserEmail = z.string().email("Digite um E-mail válido");
 
 // TODO update values by validateCep result
+// TODO upload user profile picture
 const addressUpdatePerCep = createDecorator({
   field: "cep",
   updates: {
@@ -35,6 +36,70 @@ const addressUpdatePerCep = createDecorator({
     },
   },
 });
+
+interface UserImageUploadFormProps {
+  fieldRenderProps: FieldRenderProps<unknown, HTMLElement, unknown>;
+  isVisualizationOnly: boolean;
+}
+
+const UserImageUploadForm = (
+  props: FieldRenderProps<unknown, HTMLElement, unknown>
+) => {
+  const [fileSelected, setFileSelected] = useState<File>();
+  const { input, meta } = props;
+
+  const error = meta.error && meta.touched;
+
+  const [image, setImage] = useState<string | ArrayBuffer | null>("");
+
+  useEffect(() => {
+    setImage(input.value);
+  }, [input.value]);
+
+  const getBase64 = (file: Blob) => {
+    const reader = new FileReader();
+
+    if (file !== undefined) {
+      reader.readAsDataURL(file);
+
+      reader.onload = () => {
+        setImage(reader.result);
+      };
+    }
+  };
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const formData = new FormData();
+
+    formData.append("file", e.target.files[0]);
+    getBase64(e.target.files[0]);
+    input.onChange(e.target.files[0]);
+  };
+
+  return (
+    <>
+      <div>
+        <input
+          type="file"
+          name={input.name}
+          onChange={(e) => {
+            handleChange(e);
+          }}
+        />
+        <UserAvatar
+          src={image as string}
+          imageSize={168}
+          alt="foto de perfil"
+        />
+        <span>Clique na imagem para adicionar sua foto</span>
+      </div>
+      <span>Tamanho máximo de 10MB.</span>
+      {error && <span>{meta.error}</span>}
+    </>
+  );
+};
+
+export default UserImageUploadForm;
 
 const ProfileForm = () => {
   const [isVisualizationOnly, setIsVisualizationOnly] = useState(true);
@@ -84,9 +149,7 @@ const ProfileForm = () => {
         decorators={[addressUpdatePerCep]}
         validate={(values) => {
           const errors = {};
-          if (!values.name) {
-            errors.name = "Required";
-          }
+          // TODO Validation
           return errors;
         }}
         render={({ handleSubmit, form, values }) => (
